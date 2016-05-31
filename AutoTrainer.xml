@@ -180,7 +180,7 @@ end
 function OrderMatters(name, line, wildcards)
 	curOrder = {wildcards[1],wildcards[2],wildcards[3],wildcards[4],wildcards[5],wildcards[6]}
 	--tprint(wildcards)
-	tprint(curOrder)
+	--tprint(curOrder)
 	SetVariable("test","test ="..serialize.save_simple(curOrder))
    
 	--tprint(curOrder)
@@ -189,17 +189,56 @@ function OnPluginInstall()
 	assert (loadstring (GetVariable ("test") or "")) ()
 	curOrder = test or  {'Int', 'Luck', 'Wis', 'Con', 'Dex', 'Str'}
 end
+function check_Lowest_Max_Cost()
+	curMaxIndex = {value.Int, value.Luck, value.Wis, value.Con, value.Dex, value.Str}
+	for i, value in ipairs(curMaxIndex) do
+		-- print(value)
+		-- Note(curMaxCost)
+		 -- Note("curLowestCost "..curLowestCost)
+		-- print("")
+		if tonumber(value.Cost) > tonumber(curMaxCost) then
+			
+			curMaxCost = tonumber(value.Cost)
+			--Note(curMaxCost)
+			if value.Cost > 3 then curMaxCost = 3 end--if
+			--Note(curMaxCost.." is your current max cost")
+		end -- if
+		if tonumber(value.Cost)<tonumber(curLowestCost) and value.Trained ~= value.Max then
+			
+			curLowestCost= tonumber(value.Cost)
+			
+			 -- Note("curLowestCost "..curLowestCost)
+		end--if
+		-- if count < 2 then curLowestCost = curLowestCost+1 end--if
+		-- if curLowestCost>3 then curLowestCost= 3 end--if
+	end
+end
 function trainerStore(name, line, wildcards)
+	curLowestCost= 3
 	local str = tostring( wildcards[1])
 	if string.find(str, "Hp") or string.find(str, "Moves") or string.find(str, "Mana") then
 		if string.find(str, "Moves") then
 			EnableTriggerGroup("autoTrain", false)
+			check_Lowest_Max_Cost()
 
-			for i, p in pairs(curOrder) do
-				-- print(p)
-				-- tprint(value[p])
-				trainerGO(value[p], p)
-			end --for
+			--while tonumber(value.Trains) >= tonumber(curLowestCost) and curLowestCost < curMaxCost do
+				-- print(value.Trains.. " trains")
+				-- print (curLowestCost.. " curLowestCost")
+				-- print (curMaxCost.. " curMaxCost")
+
+				for i, p in pairs(curOrder) do
+					check_Lowest_Max_Cost()
+					 -- print(p)
+					-- tprint(value[p])
+					if (value[p].Cost ~= curMaxCost) then 
+					trainerGO(value[p], p)
+					end--if
+					--Note(curLowestCost)
+					--Note (curMaxCost)
+					--Note("")
+				end --for
+				
+			--end
 		end --if
 		return
 	end-- if
@@ -270,6 +309,7 @@ function trainerStore(name, line, wildcards)
 	         assert (loadstring (luastmt or "")) ()
 	value.Trains = gmcpdata.worth.trains
 	value.Level = tonumber(gmcpdata.status.level)
+	--tprint (gmcpdata)
 	if value.Level == 1 and didonce== false then
          			Execute("train convertall")
          			didonce= true
@@ -281,41 +321,23 @@ function trainerStore(name, line, wildcards)
 -- value.Int.Trained = 15
 -- value.Int.Base = 1
 -- value.Int.Cost = 1
---value.Trains = 1750
+--value.Trains = 1000
 end
 curMaxIndex= {}
 curLowestCost= 10
 function trainerGO( value1, string)
+	local count = 0
 	if tonumber(value.Trains)==0 then
 		--Note("You have no trains")
 		return
 	end--if
-	curMaxIndex = {value.Int.Cost, value.Luck.Cost, value.Wis.Cost, value.Con.Cost, value.Dex.Cost, value.Str.Cost}
-	-- print("test "..curMaxCost.." "..curLowestCost)
-
-	for i, value in ipairs(curMaxIndex) do
-		-- print(value)
-		-- Note(curMaxCost)
-		-- Note("curLowestCost "..curLowestCost)
-		if tonumber(value) > tonumber(curMaxCost) then
+	
+	-- if value.Level == 1 then
+	-- 	if tonumber(value.Int.Trained)<tonumber(value.Int.Max) and tonumber(value.Int.Cost)<=costMax and tonumber(value.Int.Cost)<=curMaxCost then
 			
-			curMaxCost = tonumber(value)
-			--Note(curMaxCost)
-
-			--Note(curMaxCost.." is your current max cost")
-		end -- if
-		if tonumber(value)<tonumber(curLowestCost) then
-			curLowestCost= tonumber(value)
-			-- Note("curLowestCost "..curLowestCost)
-		end--if
-		
-	end
-	if value.Level == 1 then
-		if tonumber(value.Int.Trained)<tonumber(value.Int.Max) and tonumber(value.Int.Cost)<=costMax and tonumber(value.Int.Cost)<=curMaxCost then
-			
-			TrainerTrain(value.Int, "int")
-		end--if
-	else
+	-- 		TrainerTrain(value.Int, "int")
+	-- 	end--if
+	-- else
 		-- print ("v1.Trained "..value1.Trained)
 		-- print ("v1.Max "..value1.Max)
 		-- print ("v1.Cost "..value1.Cost)
@@ -338,14 +360,16 @@ function trainerGO( value1, string)
 		-- 	TrainerTrain(value.Str, "str")
 		else
 			-- Note("All Stats are maxed or at cap")
+
 		end --if
-	end--if
+	-- end--if
 end
 
 counter= 0
 function TrainerTrain(stat, string)
 	--Note(string)
 	--tprint(stat)
+	--print("")
 	if tonumber(value.Trains)>= tonumber(stat.Cost)  then
 			
 			counter = counter + 1
@@ -359,13 +383,13 @@ function TrainerTrain(stat, string)
 			return
 	end --if
 	checkLimit(stat)
-		if tonumber(stat.Trained)>=tonumber(stat.Max) or tonumber(stat.Cost)>=costMax or tonumber(stat.Cost)>curMaxCost or tonumber(value.Trains)<tonumber(stat.Cost) then
+		if tonumber(stat.Trained)>=tonumber(stat.Max) or tonumber(stat.Cost)>=costMax or tonumber(stat.Cost)>curLowestCost or tonumber(value.Trains)<tonumber(stat.Cost) then
 				--Note(curMaxCost.." is curMaxCost ")
 				Execute ("train "..counter.." "..string )
 				counter= 0
 		end-- if
 		
-		--Note(value.Trains.." Trains Left")
+		Note(value.Trains.." Trains Left")
 		if tonumber(value.Trains)>=tonumber(curLowestCost) then
 			--Note("again")
 			trainerGO(stat, string)
