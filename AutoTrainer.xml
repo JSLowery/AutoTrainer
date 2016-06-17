@@ -230,7 +230,7 @@ function trainerStore(name, line, wildcards)
 					check_Lowest_Max_Cost()
 					 -- print(p)
 					-- tprint(value[p])
-					if (value[p].Cost ~= curMaxCost) then 
+					if (value[p].Cost ~= costMax) then 
 					trainerGO(value[p], p)
 					end--if
 					--Note(curLowestCost)
