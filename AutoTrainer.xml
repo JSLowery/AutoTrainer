@@ -190,11 +190,13 @@ function OnPluginInstall()
 	curOrder = test or  {'Int', 'Luck', 'Wis', 'Con', 'Dex', 'Str'}
 end
 function check_Lowest_Max_Cost()
+	curLowestCost= 3
+	curMaxCost= 0
 	curMaxIndex = {value.Int, value.Luck, value.Wis, value.Con, value.Dex, value.Str}
 	for i, value in ipairs(curMaxIndex) do
-		-- print(value)
+		-- tprint(value)
 		-- Note(curMaxCost)
-		 -- Note("curLowestCost "..curLowestCost)
+		--  Note("curLowestCost "..curLowestCost)
 		-- print("")
 		if tonumber(value.Cost) > tonumber(curMaxCost) then
 			
@@ -204,7 +206,7 @@ function check_Lowest_Max_Cost()
 			--Note(curMaxCost.." is your current max cost")
 		end -- if
 		if tonumber(value.Cost)<tonumber(curLowestCost) and value.Trained ~= value.Max then
-			
+			-- print(value.Max)
 			curLowestCost= tonumber(value.Cost)
 			
 			 -- Note("curLowestCost "..curLowestCost)
@@ -214,31 +216,33 @@ function check_Lowest_Max_Cost()
 	end
 end
 function trainerStore(name, line, wildcards)
-	curLowestCost= 3
+	
+	local counter = 0
 	local str = tostring( wildcards[1])
 	if string.find(str, "Hp") or string.find(str, "Moves") or string.find(str, "Mana") then
 		if string.find(str, "Moves") then
 			EnableTriggerGroup("autoTrain", false)
 			check_Lowest_Max_Cost()
-
-			--while tonumber(value.Trains) >= tonumber(curLowestCost) and curLowestCost < curMaxCost do
+			while tonumber(value.Trains) >= tonumber(curLowestCost) and curLowestCost < costMax do-- this is a test case mother fucker also stop programming while drunk
 				-- print(value.Trains.. " trains")
 				-- print (curLowestCost.. " curLowestCost")
 				-- print (curMaxCost.. " curMaxCost")
-
+				check_Lowest_Max_Cost()
 				for i, p in pairs(curOrder) do
 					check_Lowest_Max_Cost()
 					 -- print(p)
 					-- tprint(value[p])
 					if (value[p].Cost ~= costMax) then 
-					trainerGO(value[p], p)
+						trainerGO(value[p], p)
 					end--if
 					--Note(curLowestCost)
 					--Note (curMaxCost)
 					--Note("")
 				end --for
-				
-			--end
+				counter = counter +1
+				-- print (counter)
+				if counter> 3 then return end
+			end
 		end --if
 		return
 	end-- if
