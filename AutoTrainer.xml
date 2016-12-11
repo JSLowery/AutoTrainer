@@ -64,7 +64,23 @@ Use SetOrder to set the order, has to be in the form of
   </trigger>
   <trigger
    group="autoTrain"
+   match="^              Base    Race   Wish   Your                  $"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+  >
+  </trigger>
+  <trigger
+   group="autoTrain"
    match="^              Cost    Mod    Mod    Mod    Cost    Trained    Max  $"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+  >
+  </trigger>
+  <trigger
+   group="autoTrain"
+   match="^              Cost    Mod    Mod    Cost    Trained    Max  $"
    omit_from_output="y"
    regexp="y"
    sequence="100"
@@ -79,14 +95,37 @@ Use SetOrder to set the order, has to be in the form of
   >
   </trigger>
   <trigger
+   group="autoTrain"
+   match="^              \-\-\-\-\-\-\- \-\-\-\-\-\- \-\-\-\-\-\- \-\-\-\-\-\-  \-\-\-\-\-\-\-  \-\-\-\-\-\-\-$"
+   omit_from_output="y"
+   regexp="y"
+   sequence="100"
+  >
+  </trigger>
+  <trigger
+   name="cap"
    custom_colour="7"
    group="autoTrain"
-   match="^(.+\s*) \:\s* \b(\d?\b)\s* ([-]?\d?\b)\s* ([-]?\d?\b)\s* ([-]?\d?\b)\s*(\b.+?\b)\s*(\b.+?\b)\s*(.+?)(\*)?$"
+   match="^(\w+)\s*\:\s* \b(\d?\b)\s* ([-]?\d?\b)\s* ([-]?\d?\b)?\s* ([-]?\d?\b)\s*(\b.+?\b)\s*(\b.+?\b)\s*(.+?)(\*)?$"
    omit_from_output="y"
    regexp="y"
    script="trainerStore"
    send_to="12"
    sequence="100"
+  >
+  <send>
+</send>
+  </trigger>
+  <trigger
+   name="cap1"
+   custom_colour="3"
+   group="autoTrain"
+   match="^(\w+)\s*\:\s* \b(\d?\b)\s* ([-]?\d?\b)\s* ([-]?\d?\b)\s*(\b.+?\b)\s*(\b.+?\b)\s*(.+?)(\*)?$"
+   omit_from_output="y"
+   regexp="y"
+   script="trainerStore"
+   send_to="12"
+   sequence="99"
   >
   <send>
 </send>
@@ -126,11 +165,9 @@ Use SetOrder to set the order, has to be in the form of
    regexp="y"
    send_to="12"
    sequence="100"
+   script="TAScript"
   >
-  <send>EnableTriggerGroup("autoTrain", true)
---Execute("recal;s")
-Execute("train convertall")
-Execute("train")
+  <send>
 
 </send>
   </alias>
@@ -170,9 +207,28 @@ costMax = 3
 curMaxCost = 0
 didonce= false
 curOrder = {"Int", "Luck", "Wis", "Con", "Dex", "Str"}
-
+local tierCorrect = 0
 
 --print(test)
+function TAScript()
+	EnableTriggerGroup("autoTrain", true)
+--Execute("recal;s")
+		res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char.base.tier")
+        luastmt = "gmcpdatacharstatus = " .. gmcparg
+        assert (loadstring (luastmt or "")) ()
+        char_status = gmcpdatacharstatus
+        EnableTrigger("cap", 1)
+        EnableTrigger("cap1", 0)
+        if char_status <1 then 
+        	tierCorrect = 1 
+        	EnableTrigger("cap1", 1)
+        	EnableTrigger("cap", 0)
+        end
+
+
+Execute("train convertall")
+Execute("train")
+end
 function printOrder()
 	tprint (curOrder)
 	--print (test)
@@ -215,8 +271,9 @@ function check_Lowest_Max_Cost()
 		-- if curLowestCost>3 then curLowestCost= 3 end--if
 	end
 end
+
 function trainerStore(name, line, wildcards)
-	
+	--tprint(wildcards)
 	local counter = 0
 	local str = tostring( wildcards[1])
 	if string.find(str, "Hp") or string.find(str, "Moves") or string.find(str, "Mana") then
@@ -250,61 +307,73 @@ function trainerStore(name, line, wildcards)
 	if string.find(str, "Strength") then
 		value.Str.Base = tonumber(wildcards[2])
 		value.Str.RMod = tonumber(wildcards[3])
-		value.Str.TMod = tonumber(wildcards[4])
-		value.Str.WMod = tonumber(wildcards[5])
-		value.Str.Cost = tonumber(wildcards[6])
-		value.Str.Trained = tonumber(wildcards[7])
-		value.Str.Max = tonumber(wildcards[8])
+		if tierCorrect == 0 then 
+			value.Str.TMod = tonumber(wildcards[4])
+		end
+		value.Str.WMod = tonumber(wildcards[5-tierCorrect])
+		value.Str.Cost = tonumber(wildcards[6-tierCorrect])
+		value.Str.Trained = tonumber(wildcards[7-tierCorrect])
+		value.Str.Max = tonumber(wildcards[8-tierCorrect])
 		
 	end --if
 	if string.find(str, "Dexterity") then
 		value.Dex.Base = tonumber(wildcards[2])
 		value.Dex.RMod = tonumber(wildcards[3])
-		value.Dex.TMod = tonumber(wildcards[4])
-		value.Dex.WMod = tonumber(wildcards[5])
-		value.Dex.Cost = tonumber(wildcards[6])
-		value.Dex.Trained = tonumber(wildcards[7])
-		value.Dex.Max = tonumber(wildcards[8])
+		if tierCorrect == 0 then
+			value.Dex.TMod = tonumber(wildcards[4])
+		end
+		value.Dex.WMod = tonumber(wildcards[5-tierCorrect])
+		value.Dex.Cost = tonumber(wildcards[6-tierCorrect])
+		value.Dex.Trained = tonumber(wildcards[7-tierCorrect])
+		value.Dex.Max = tonumber(wildcards[8-tierCorrect])
 		
 	end --if
 	if string.find(str, "Intelligence") then
 		value.Int.Base = tonumber(wildcards[2])
 		value.Int.RMod = tonumber(wildcards[3])
-		value.Int.TMod = tonumber(wildcards[4])
-		value.Int.WMod = tonumber(wildcards[5])
-		value.Int.Cost = tonumber(wildcards[6])
-		value.Int.Trained = tonumber(wildcards[7])
-		value.Int.Max = tonumber(wildcards[8])
+		if tierCorrect == 0 then
+			value.Int.TMod = tonumber(wildcards[4])
+		end
+		value.Int.WMod = tonumber(wildcards[5-tierCorrect])
+		value.Int.Cost = tonumber(wildcards[6-tierCorrect])
+		value.Int.Trained = tonumber(wildcards[7-tierCorrect])
+		value.Int.Max = tonumber(wildcards[8-tierCorrect])
 		
 	end --if
 	if string.find(str, "Wisdom") then
 		value.Wis.Base = tonumber(wildcards[2])
 		value.Wis.RMod = tonumber(wildcards[3])
-		value.Wis.TMod = tonumber(wildcards[4])
-		value.Wis.WMod = tonumber(wildcards[5])
-		value.Wis.Cost = tonumber(wildcards[6])
-		value.Wis.Trained = tonumber(wildcards[7])
-		value.Wis.Max = tonumber(wildcards[8])
+		if tierCorrect == 0 then
+			value.Wis.TMod = tonumber(wildcards[4])
+		end
+		value.Wis.WMod = tonumber(wildcards[5-tierCorrect])
+		value.Wis.Cost = tonumber(wildcards[6-tierCorrect])
+		value.Wis.Trained = tonumber(wildcards[7-tierCorrect])
+		value.Wis.Max = tonumber(wildcards[8-tierCorrect])
 		
 	end --if
 	if string.find(str, "Constitution") then
 		value.Con.Base = tonumber(wildcards[2])
 		value.Con.RMod = tonumber(wildcards[3])
-		value.Con.TMod = tonumber(wildcards[4])
-		value.Con.WMod = tonumber(wildcards[5])
-		value.Con.Cost = tonumber(wildcards[6])
-		value.Con.Trained = tonumber(wildcards[7])
-		value.Con.Max = tonumber(wildcards[8])
+		if tierCorrect == 0 then
+			value.Con.TMod = tonumber(wildcards[4])
+		end
+		value.Con.WMod = tonumber(wildcards[5-tierCorrect])
+		value.Con.Cost = tonumber(wildcards[6-tierCorrect])
+		value.Con.Trained = tonumber(wildcards[7-tierCorrect])
+		value.Con.Max = tonumber(wildcards[8-tierCorrect])
 		
 	end --if
 	if string.find(str, "Luck") then
 		value.Luck.Base = tonumber(wildcards[2])
 		value.Luck.RMod = tonumber(wildcards[3])
-		value.Luck.TMod = tonumber(wildcards[4])
-		value.Luck.WMod = tonumber(wildcards[5])
-		value.Luck.Cost = tonumber(wildcards[6])
-		value.Luck.Trained = tonumber(wildcards[7])
-		value.Luck.Max = tonumber(wildcards[8])
+		if tierCorrect == 0 then
+			value.Luck.TMod = tonumber(wildcards[4])
+		end
+		value.Luck.WMod = tonumber(wildcards[5-tierCorrect])
+		value.Luck.Cost = tonumber(wildcards[6-tierCorrect])
+		value.Luck.Trained = tonumber(wildcards[7-tierCorrect])
+		value.Luck.Max = tonumber(wildcards[8-tierCorrect])
 		
 	end --if
 	res, gmcparg = CallPlugin("3e7dedbe37e44942dd46d264","gmcpval","char") --- We just want the gmcp.char section.
@@ -342,11 +411,13 @@ function trainerGO( value1, string)
 	-- 		TrainerTrain(value.Int, "int")
 	-- 	end--if
 	-- else
-		-- print ("v1.Trained "..value1.Trained)
-		-- print ("v1.Max "..value1.Max)
-		-- print ("v1.Cost "..value1.Cost)
-		-- print ("v.Trains "..value.Trains)
-		-- print ("cur lowest cost "..curLowestCost)
+	print("")
+	--tprint(value1)
+		print ("v1.Trained "..value1.Trained)
+		print ("v1.Max "..value1.Max)
+		print ("v1.Cost "..value1.Cost)
+		print ("v.Trains "..value.Trains)
+		print ("cur lowest cost "..curLowestCost)
 
 		if tonumber(value1.Trained)<tonumber(value1.Max) and  tonumber(value1.Cost)<=curLowestCost and tonumber(value.Trains)>=tonumber(value1.Cost) then
 		 	TrainerTrain(value1, string)
@@ -393,7 +464,7 @@ function TrainerTrain(stat, string)
 				counter= 0
 		end-- if
 		
-		Note(value.Trains.." Trains Left")
+		--Note(value.Trains.." Trains Left")
 		if tonumber(value.Trains)>=tonumber(curLowestCost) then
 			--Note("again")
 			trainerGO(stat, string)
@@ -409,7 +480,10 @@ function checkLimit(stat)
 			if tonumber(stat.Base)==1 then
 				stat.Base = stat.Base +1
 			end --if
-			local testMax= stat.Base+ stat.TMod+ stat.RMod+ stat.WMod
+			local testMax= stat.Base+ stat.RMod+ stat.WMod
+			if tierCorrect == 0 then 
+				testMax =testMax + stat.TMod
+			end
 			if testMax> stat.Cost then
 				stat.Cost = testMax
 			end--if
@@ -417,7 +491,10 @@ function checkLimit(stat)
 			if tonumber(stat.Base)==2 then
 				stat.Base = stat.Base +1
 			end --if
-			local testMax= stat.Base+ stat.TMod+ stat.RMod+ stat.WMod
+			local testMax= stat.Base+ stat.RMod+ stat.WMod
+			if tierCorrect == 0 then 
+				testMax =testMax + stat.TMod
+			end
 			--Note (testMax.. " is TestMax ".. stat.Cost.." is Cost")
 			if testMax> stat.Cost then
 				stat.Cost = testMax
@@ -426,7 +503,10 @@ function checkLimit(stat)
 			if tonumber(stat.Base)==3 then
 				stat.Base = stat.Base +1
 			end --if
-			local testMax= stat.Base+ stat.TMod+ stat.RMod+ stat.WMod
+			local testMax= stat.Base+ stat.RMod+ stat.WMod
+			if tierCorrect == 0 then 
+				testMax =testMax + stat.TMod
+			end
 			if testMax> stat.Cost then
 				stat.Cost = testMax
 			end--if
@@ -434,7 +514,10 @@ function checkLimit(stat)
 			if tonumber(stat.Base)==4 then
 				stat.Base = stat.Base +2
 			end --if
-			local testMax= stat.Base+ stat.TMod+ stat.RMod+ stat.WMod
+			local testMax= stat.Base+ stat.RMod+ stat.WMod
+			if tierCorrect == 0 then 
+				testMax =testMax + stat.TMod
+			end
 			if testMax> stat.Cost then
 				stat.Cost = testMax
 			end--if
@@ -443,7 +526,10 @@ function checkLimit(stat)
 			if tonumber(stat.Base)==6 then
 				stat.Base = stat.Base +3
 			end --if
-			local testMax= stat.Base+ stat.TMod+ stat.RMod+ stat.WMod
+			local testMax= stat.Base+ stat.RMod+ stat.WMod
+			if tierCorrect == 0 then 
+				testMax =testMax + stat.TMod
+			end
 			if testMax> stat.Cost then
 				stat.Cost = testMax
 			end--if
@@ -451,7 +537,10 @@ function checkLimit(stat)
 			if tonumber(stat.Base)==9 then
 				stat.Base = stat.Base +2
 			end --if
-			local testMax= stat.Base+ stat.TMod+ stat.RMod+ stat.WMod
+			local testMax= stat.Base+ stat.RMod+ stat.WMod
+			if tierCorrect == 0 then 
+				testMax =testMax + stat.TMod
+			end
 			if testMax> stat.Cost then
 				stat.Cost = testMax
 			end--if
