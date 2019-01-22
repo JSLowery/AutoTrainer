@@ -235,7 +235,7 @@ function setMaxNum(name, line, wildcards)
     if max > 0 then
         costMax = tonumber(max)
         SetVariable("maxNum","maxNum ="..serialize.save_simple(costMax))
-        print(string.format("You have set your Max to %s", costMAx))
+        print(string.format("You have set your Max to %s", costMax))
     else
         print("Max number cannot be negative")
     end
