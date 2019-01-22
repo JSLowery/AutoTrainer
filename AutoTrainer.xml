@@ -258,7 +258,7 @@ function OnPluginInstall()
     costMax = maxNum or 3
 end
 function check_Lowest_Max_Cost()
-	curLowestCost= costMax
+	curLowestCost= 3
 	curMaxCost= 0
 	curMaxIndex = {value.Int, value.Luck, value.Wis, value.Con, value.Dex, value.Str}
 	for i, value in ipairs(curMaxIndex) do
@@ -383,6 +383,7 @@ function trainerGO( value1, string)
 		return
 	end--if
 		if tonumber(value1.Trained)<tonumber(value1.Max) and  tonumber(value1.Cost)<=curLowestCost and tonumber(value.Trains)>=tonumber(value1.Cost) then
+            TrainerTrain(value1, string)
 		else
 
 		end --if
